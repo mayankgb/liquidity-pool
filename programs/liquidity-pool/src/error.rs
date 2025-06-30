@@ -26,6 +26,8 @@ pub enum PoolError {
     #[msg("imbalance pool error")]
     ImbalancedDeposit,
     #[msg("pool error zero shares")]
-    ZeroShares
+    ZeroShares,
+    #[msg("Insufficient liquidity")]
+    InsufficientLiquidity
 }
 
