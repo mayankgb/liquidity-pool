@@ -20,10 +20,10 @@ describe("liquidity-pool", () => {
   let userAUsdcAta: anchor.web3.PublicKey;
   let userBUsdcAta: anchor.web3.PublicKey;
   let swapUserUsdcAta: anchor.web3.PublicKey;
+  let swapUserSolAta: anchor.web3.PublicKey;
 
   let userASolAta: anchor.web3.PublicKey;
   let userBSolAta: anchor.web3.PublicKey;
-  let swapUserSolAta: anchor.web3.PublicKey;
 
   let poolUsdcAta: anchor.web3.PublicKey;
   let poolSolAta:anchor.web3.PublicKey;
@@ -102,12 +102,24 @@ describe("liquidity-pool", () => {
       userA.publicKey, 
     )).address
 
+    swapUserSolAta  = (await getOrCreateAssociatedTokenAccount(
+      provider.connection, 
+      wallet.payer, 
+      wrapped_solana_mint, 
+      swapUser.publicKey, 
+    )).address
+
+    // console.log("thisi sht the sol account of swpa ", a)
+
     userBSolAta = (await getOrCreateAssociatedTokenAccount(
       provider.connection, 
       wallet.payer, 
       wrapped_solana_mint, 
       userB.publicKey, 
     )).address
+
+
+    // console.log("this is the user b ", userBSolAta.toBase58())
 
     let [pda_key, bump] = anchor.web3.PublicKey.findProgramAddressSync(
       [Buffer.from("pool"), usdc_mint.toBuffer(), wrapped_solana_mint.toBuffer()],
@@ -153,7 +165,7 @@ describe("liquidity-pool", () => {
       wrapped_solana_mint, 
       userASolAta, 
       wallet.payer, 
-      10000000 * LAMPORTS_PER_SOL
+      100_000_00 * LAMPORTS_PER_SOL
     )
 
     const tx2 = await mintTo(
@@ -165,6 +177,8 @@ describe("liquidity-pool", () => {
       10000000 * LAMPORTS_PER_SOL
     )
 
+    // console.log("this is the swapusersolata ", swapUSerSolAta.toBase58())
+
     const swaptx = await mintTo(
       provider.connection,
       wallet.payer, 
@@ -172,6 +186,16 @@ describe("liquidity-pool", () => {
       swapUserUsdcAta, 
       wallet.payer, 
       10000000 * USDC_DECIMALS
+    )
+
+    const swapSoltx = await mintTo(
+      provider.connection, 
+      wallet.payer, 
+      wrapped_solana_mint, 
+      swapUserSolAta, 
+      wallet.payer, 
+      100_000_00 * LAMPORTS_PER_SOL
+
     )
   })
   
@@ -194,8 +218,8 @@ describe("liquidity-pool", () => {
 
   it("Is initialized pool!", async () => {
     // Add your test here.
-    let usdc_amount = 600 * USDC_DECIMALS;
-    let sol_amount = 12 * LAMPORTS_PER_SOL
+    let usdc_amount = 500_000_0 * USDC_DECIMALS;
+    let sol_amount = 10_000_0 * LAMPORTS_PER_SOL
 
     const tx = await program.methods.deposit(new anchor.BN(usdc_amount),new anchor.BN(sol_amount))
     .accountsPartial({
@@ -223,8 +247,8 @@ describe("liquidity-pool", () => {
   });
 
   it("userB try to provide liqiuidity", async () => {
-    const usdcAmount = 400 * USDC_DECIMALS;
-    const solAmount = 8 * LAMPORTS_PER_SOL;
+    const usdcAmount = 100_000_0 * USDC_DECIMALS;
+    const solAmount = 200_00 * LAMPORTS_PER_SOL;
 
     const tx = await program.methods.deposit(new anchor.BN(usdcAmount),new anchor.BN(solAmount))
     .accountsPartial({
@@ -248,48 +272,48 @@ describe("liquidity-pool", () => {
     console.log("This is the balance  of the liquidity pool usdc after swapping", Number(poolusdcAccountInfo.amount) / USDC_DECIMALS)
     console.log("This is the balance of the liquidity pool solana after swapping", Number(poolSolAtaInfo.amount) / LAMPORTS_PER_SOL)
   })
-  // it("userB try to provide liqiuidity with 1 percent change", async () => {
-  //   const usdcAmount = 101 * USDC_DECIMALS;
-  //   const solAmount = 2 * LAMPORTS_PER_SOL;
+  it("userB try to provide liqiuidity with 1 percent change", async () => {
+    const usdcAmount = 101 * USDC_DECIMALS;
+    const solAmount = 2 * LAMPORTS_PER_SOL;
 
-  //   const tx = await program.methods.deposit(new anchor.BN(usdcAmount),new anchor.BN(solAmount))
-  //   .accountsPartial({
-  //     signer: userB.publicKey, 
-  //     usdcMint: usdc_mint, 
-  //     wrappedSolMint: wrapped_solana_mint,
-  //     userUsdcAta: userBUsdcAta, 
-  //     userSolAta: userBSolAta,
-  //     userPda: userBPda, 
-  //     poolPda: pool_pda, 
-  //     poolSolAta: poolSolAta, 
-  //     poolUsdcAta: poolUsdcAta,
-  //     tokenProgram: TOKEN_PROGRAM_ID
-  //   })
-  //   .signers([userB])
-  //   .rpc()
-  // })
+    const tx = await program.methods.deposit(new anchor.BN(usdcAmount),new anchor.BN(solAmount))
+    .accountsPartial({
+      signer: userB.publicKey, 
+      usdcMint: usdc_mint, 
+      wrappedSolMint: wrapped_solana_mint,
+      userUsdcAta: userBUsdcAta, 
+      userSolAta: userBSolAta,
+      userPda: userBPda, 
+      poolPda: pool_pda, 
+      poolSolAta: poolSolAta, 
+      poolUsdcAta: poolUsdcAta,
+      tokenProgram: TOKEN_PROGRAM_ID
+    })
+    .signers([userB])
+    .rpc()
+  })
 
-  //  it("userB try to provide liqiuidity with  imabalance liquidity", async () => {
-  //   //this test should fail 
-  //   const usdcAmount = 102 * USDC_DECIMALS;
-  //   const solAmount = 2 * LAMPORTS_PER_SOL;
+   it("userB try to provide liqiuidity with  imabalance liquidity", async () => {
+    //this test should fail 
+    const usdcAmount = 102 * USDC_DECIMALS;
+    const solAmount = 2 * LAMPORTS_PER_SOL;
 
-  //   const tx = await program.methods.deposit(new anchor.BN(usdcAmount),new anchor.BN(solAmount))
-  //   .accountsPartial({
-  //     signer: userB.publicKey, 
-  //     usdcMint: usdc_mint, 
-  //     wrappedSolMint: wrapped_solana_mint,
-  //     userUsdcAta: userBUsdcAta, 
-  //     userSolAta: userBSolAta,
-  //     userPda: userBPda, 
-  //     poolPda: pool_pda, 
-  //     poolSolAta: poolSolAta, 
-  //     poolUsdcAta: poolUsdcAta,
-  //     tokenProgram: TOKEN_PROGRAM_ID
-  //   })
-  //   .signers([userB])
-  //   .rpc()
-  // })
+    const tx = await program.methods.deposit(new anchor.BN(usdcAmount),new anchor.BN(solAmount))
+    .accountsPartial({
+      signer: userB.publicKey, 
+      usdcMint: usdc_mint, 
+      wrappedSolMint: wrapped_solana_mint,
+      userUsdcAta: userBUsdcAta, 
+      userSolAta: userBSolAta,
+      userPda: userBPda, 
+      poolPda: pool_pda, 
+      poolSolAta: poolSolAta, 
+      poolUsdcAta: poolUsdcAta,
+      tokenProgram: TOKEN_PROGRAM_ID
+    })
+    .signers([userB])
+    .rpc()
+  })
 
   it("swaping the usdc token with solana from the pool", async () => {
     const swapAmount = 500 * USDC_DECIMALS
@@ -317,6 +341,35 @@ describe("liquidity-pool", () => {
 
     console.log("This is the balance  of the liquidity pool usdc after swapping", Number(poolusdcAccountInfo.amount) / USDC_DECIMALS)
     console.log("This is the balance of the liquidity pool solana after swapping", Number(poolSolAtaInfo.amount) / LAMPORTS_PER_SOL)
+  })
+
+  it("swaping the solana token for usdc token from the pool", async () => {
+    const swapAmount = 500 * LAMPORTS_PER_SOL
+
+    const tx = await program.methods.swap(new anchor.BN(swapAmount))
+    .accountsPartial({
+      signer: swapUser.publicKey, 
+      usdcMint: usdc_mint, 
+      wrappedSolMint: wrapped_solana_mint, 
+      baseMint: usdc_mint, 
+      poolUsdcAta: poolUsdcAta, 
+      poolSolAta: poolSolAta, 
+      userBaseAta: swapUserUsdcAta, 
+      userQuoteAta: swapUserSolAta,
+      tokenProgram: TOKEN_PROGRAM_ID
+    })
+    .signers([swapUser])
+    .rpc()
+
+    const poolusdcAccountInfo = await getAccount(provider.connection, poolUsdcAta)
+    const poolSolAtaInfo = await getAccount(provider.connection,poolSolAta)
+    const poolPdaData = await program.account.pool.fetch(pool_pda)
+
+    console.log("this is the data of the account after swapping", poolPdaData.feesCollectedUsdc.toNumber() / USDC_DECIMALS)
+
+    console.log("This is the balance  of the liquidity pool usdc after swapping", Number(poolusdcAccountInfo.amount) / USDC_DECIMALS)
+    console.log("This is the balance of the liquidity pool solana after swapping", Number(poolSolAtaInfo.amount) / LAMPORTS_PER_SOL)
+    
   })
 
   it("userB withdraw amount", async () => {
@@ -347,23 +400,23 @@ describe("liquidity-pool", () => {
     console.log("This is the balance of the liquidity pool solana after swapping", Number(poolSolAtaInfo.amount) / LAMPORTS_PER_SOL)
   })
 
-  // it("userB withdraw amount", async () => {
-  //   const tx = await program.methods.withdraw()
-  //   .accountsPartial({
-  //     signer: userB.publicKey, 
-  //     usdcMint: usdc_mint, 
-  //     wrappedSolMint: wrapped_solana_mint,
-  //     userPda: userBPda,
-  //     poolPda:pool_pda, 
-  //     poolUsdcAta: poolUsdcAta, 
-  //     poolWrappedSolAta: poolSolAta,
-  //     userSolAta: userBSolAta, 
-  //     userUsdcAta: userBUsdcAta, 
-  //     tokenProgram: TOKEN_PROGRAM_ID
-  //   })
-  //   .signers([userB])
-  //   .rpc()
-  // })
+  it("userB withdraw amount", async () => {
+    const tx = await program.methods.withdraw()
+    .accountsPartial({
+      signer: userB.publicKey, 
+      usdcMint: usdc_mint, 
+      wrappedSolMint: wrapped_solana_mint,
+      userPda: userBPda,
+      poolPda:pool_pda, 
+      poolUsdcAta: poolUsdcAta, 
+      poolWrappedSolAta: poolSolAta,
+      userSolAta: userBSolAta, 
+      userUsdcAta: userBUsdcAta, 
+      tokenProgram: TOKEN_PROGRAM_ID
+    })
+    .signers([userB])
+    .rpc()
+  })
 
   it("userA withdraw amount", async () => {
     const tx = await program.methods.withdraw()

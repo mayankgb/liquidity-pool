@@ -122,7 +122,7 @@ pub fn process_swap(ctx: Context<Swap>, swap_amount: u64) -> Result<()> {
 
         let total_updated_sol = total_sol.checked_add(swap_amount).ok_or(DepositError::OverFlow)?;
         let constant_product = total_sol as u128 * total_usdc as u128;
-        let required_usdc = constant_product.checked_div(total_updated_sol as u128).ok_or(DepositError::DivisionError)? as u64 - pool_pda.total_usdc_deposit; 
+        let required_usdc = pool_pda.total_usdc_deposit - constant_product.checked_div(total_updated_sol as u128).ok_or(DepositError::DivisionError)? as u64;
         let fee_required = ((required_usdc as f64 )* ((pool_pda.liquidity_fees as f64 / 100_00.0)) )as u64;
         let usdc_to_be_paid = required_usdc.checked_sub(fee_required).ok_or(DepositError::Underflow)? ;
 
